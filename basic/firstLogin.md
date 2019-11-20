@@ -342,4 +342,12 @@ suspend    進入休眠模式
 ```
 
 
+## 如何修改默认语系
+```bash
+[root@hasee07]#nano /etc/locale.conf
+[root@hasee07]#cat /etc/locale.conf
+LANG="en_US.UTF-8"
+```
+
+
 
