@@ -183,6 +183,7 @@ total 12
         1. 纯文字档(ASCII):
         2. 二进制档(binary):
         3. 资料格式档(data):
+      
           有些程式在運作的過程當中會讀取某些特定格式的檔案，那些特定格式的檔案可以被稱為資料檔 (data file)。舉例來說，我們的Linux在使用者登入時，都會將登錄的資料記錄在 /var/log/wtmp那個檔案內，該檔案是一個data file，他能夠透過last這個指令讀出來！
     * 目录(directory)
     * 连结档(link):
@@ -214,67 +215,79 @@ total 12
 因为根目录与开机、还原、系统修复等动作有关。FHS要求根目录不要放太大分割槽，放入越多资料，越有可能出错。
 
 #### FHS要求必须存在的目录
-| 目录 | 应放置内容 |
-| --- | --- |
-| /boot | The /boot/ directory contains static files required to boot the system, such as the Linux kernel. These files are essential for the system to boot properly.  |
-| /dev | The /dev/ directory contains file system entries which represent devices that are attached to the system. These files are essential for the system to function properly. |
-| /etc |The /etc/ directory is reserved for configuration files that are local to the machine. No binaries are to be placed in /etc/. Any binaries that were once located in /etc/ should be placed into /sbin/ or /bin/.  |
-| /etc/opt(必要) | 第三方软件相关设定 |
-| /etc/X11 | 有关于X Window设定 |
-|  /etc/skel/ | for "skeleton" user files, which are used to populate a home directory when a user is first created. |
-| /lib | 系統的函式庫非常的多，而/lib放置的則是在開機時會用到的函式庫， 以及在/bin或/sbin底下的指令會呼叫的函式庫而已。 |
-| /lib/modules | 這個目錄主要放置可抽換式的核心相關模組(驅動程式)喔 |
-| /media | The /media/ directory contains subdirectories used as mount points for removeable media, such as 3.5 diskettes, CD-ROMs, and Zip disks. |
-| /mnt |  The /mnt/ directory is reserved for temporarily mounted file systems, such as NFS file system mounts. For all removeable media, use the /media/ directory. |
-| /opt | The /opt/ directory provides storage for large, static application software packages. |
-| /run | 	早期的 FHS 規定系統開機後所產生的各項資訊應該要放置到 /var/run 目錄下，新版的 FHS 則規範到 /run 底下。 由於 /run 可以使用記憶體來模擬，因此效能上會好很多！|
-| /sbin | Linux有非常多指令是用來設定系統環境的，這些指令只有root才能夠利用來『設定』系統，其他使用者最多只能用來『查詢』而已。 放在/sbin底下的為開機過程中所需要的，裡面包括了開機、修復、還原系統所需要的指令。 至於某些伺服器軟體程式，一般則放置到/usr/sbin/當中。至於本機自行安裝的軟體所產生的系統執行檔(system binary)， 則放置到/usr/local/sbin/當中了。常見的指令包括：fdisk, fsck, ifconfig, mkfs等等。|
-| /srv | srv可以視為『service』的縮寫，是一些網路服務啟動之後，這些服務所需要取用的資料目錄。 常見的服務例如WWW, FTP等等。舉例來說，WWW伺服器需要的網頁資料就可以放置在/srv/www/裡面。 不過，系統的服務資料如果尚未要提供給網際網路任何人瀏覽的話，預設還是建議放置到 /var/lib 底下即可。|
-| /tmp | 這是讓一般使用者或者是正在執行的程序暫時放置檔案的地方。|
+
+| 目录           | 应放置内容                                                   |
+| -------------- | ------------------------------------------------------------ |
+| /boot          | The /boot/ directory contains static files required to boot the system, such as the Linux kernel. These files are essential for the system to boot properly. |
+| /dev           | The /dev/ directory contains file system entries which represent devices that are attached to the system. These files are essential for the system to function properly. |
+| /etc           | The /etc/ directory is reserved for configuration files that are local to the machine. No binaries are to be placed in /etc/. Any binaries that were once located in /etc/ should be placed into /sbin/ or /bin/. |
+| /etc/opt(必要) | 第三方软件相关设定                                           |
+| /etc/X11       | 有关于X Window设定                                           |
+| /etc/skel/     | for "skeleton" user files, which are used to populate a home directory when a user is first created. |
+| /lib           | 系統的函式庫非常的多，而/lib放置的則是在開機時會用到的函式庫， 以及在/bin或/sbin底下的指令會呼叫的函式庫而已。 |
+| /lib/modules   | 這個目錄主要放置可抽換式的核心相關模組(驅動程式)喔           |
+| /media         | The /media/ directory contains subdirectories used as mount points for removeable media, such as 3.5 diskettes, CD-ROMs, and Zip disks. |
+| /mnt           | The /mnt/ directory is reserved for temporarily mounted file systems, such as NFS file system mounts. For all removeable media, use the /media/ directory. |
+| /opt           | The /opt/ directory provides storage for large, static application software packages. |
+| /run           | 早期的 FHS 規定系統開機後所產生的各項資訊應該要放置到 /var/run 目錄下，新版的 FHS 則規範到 /run 底下。 由於 /run 可以使用記憶體來模擬，因此效能上會好很多！ |
+| /sbin          | Linux有非常多指令是用來設定系統環境的，這些指令只有root才能夠利用來『設定』系統，其他使用者最多只能用來『查詢』而已。 放在/sbin底下的為開機過程中所需要的，裡面包括了開機、修復、還原系統所需要的指令。 至於某些伺服器軟體程式，一般則放置到/usr/sbin/當中。至於本機自行安裝的軟體所產生的系統執行檔(system binary)， 則放置到/usr/local/sbin/當中了。常見的指令包括：fdisk, fsck, ifconfig, mkfs等等。 |
+| /srv           | srv可以視為『service』的縮寫，是一些網路服務啟動之後，這些服務所需要取用的資料目錄。 常見的服務例如WWW, FTP等等。舉例來說，WWW伺服器需要的網頁資料就可以放置在/srv/www/裡面。 不過，系統的服務資料如果尚未要提供給網際網路任何人瀏覽的話，預設還是建議放置到 /var/lib 底下即可。 |
+| /tmp           | 這是讓一般使用者或者是正在執行的程序暫時放置檔案的地方。     |
+
+
 
 重要的目录
-| 目录 | 应放置的内容 |
-| --- | --- |
-| /lost+found | 這個目錄是使用標準的ext2/ext3/ext4檔案系統格式才會產生的一個目錄，目的在於當檔案系統發生錯誤時， 將一些遺失的片段放置到這個目錄下。不過如果使用的是 xfs 檔案系統的話，就不會存在這個目錄了！|
-| /proc | 這個目錄本身是一個『虛擬檔案系統(virtual filesystem)』喔！他放置的資料都是在記憶體當中， 例如系統核心、行程資訊(process)、周邊裝置的狀態及網路狀態等等。因為這個目錄下的資料都是在記憶體當中， 所以本身不佔任何硬碟空間啊！比較重要的檔案例如：/proc/cpuinfo, /proc/dma, /proc/interrupts, /proc/ioports, /proc/net/* 等等。|
-| /sys | 	這個目錄其實跟/proc非常類似，也是一個虛擬的檔案系統，主要也是記錄核心與系統硬體資訊較相關的資訊。 |
+
+| **目录**    | **应放置的内容**                                             |
+| ----------- | ------------------------------------------------------------ |
+| /lost+found | 這個目錄是使用標準的ext2/ext3/ext4檔案系統格式才會產生的一個目錄，目的在於當檔案系統發生錯誤時， 將一些遺失的片段放置到這個目錄下。不過如果使用的是 xfs 檔案系統的話，就不會存在這個目錄了！ |
+| /proc       | 這個目錄本身是一個『虛擬檔案系統(virtual filesystem)』喔！他放置的資料都是在記憶體當中， 例如系統核心、行程資訊(process)、周邊裝置的狀態及網路狀態等等。因為這個目錄下的資料都是在記憶體當中， 所以本身不佔任何硬碟空間啊！比較重要的檔案例如：/proc/cpuinfo, /proc/dma, /proc/interrupts, /proc/ioports, /proc/net/* 等等。 |
+| /sys        | 這個目錄其實跟/proc非常類似，也是一個虛擬的檔案系統，主要也是記錄核心與系統硬體資訊較相關的資訊。 |
 
 #### usr的意义及内容
 FHS建议存在目录
-| 目录 | 应存放内容 |
-| --- | --- |
-| /usr/bin | 一般用户使用的指令都存放在这。而且centos7通过连结档将/bin连结至此 |
-| /usr/lib | almost with /lib |
-| /usr/local | 管理员自行安装的软件存放处 |
-| /usr/sbin/ | 非必须的系统指令 |
-| /usr/share | 放置只读文件 |
-| /usr/share/man | 线上说明
-| /usr/share/doc | 软件杂项说明 |
-| /usr/share/zoneinfo | 时区档案 |
+
+| **目录**            | **应存放内容**                                               |
+| ------------------- | ------------------------------------------------------------ |
+| /usr/bin            | 一般用户使用的指令都存放在这。而且centos7通过连结档将/bin连结至此 |
+| /usr/lib            | almost with /lib                                             |
+| /usr/local          | 管理员自行安装的软件存放处                                   |
+| /usr/sbin/          | 非必须的系统指令                                             |
+| /usr/share          | 放置只读文件                                                 |
+| /usr/share/man      | 线上说明                                                     |
+| /usr/share/doc      | 软件杂项说明                                                 |
+| /usr/share/zoneinfo | 时区档案                                                     |
+
+
+
 FHS建议存在的目录
-| 目录 | 存放 |
-| --- | --- |
-| /usr/games | 游戏有关 |
-| /usr/include |c/c++等语言header包含档(include)放置处 |
-| /usr/libexec | 不常用的执行档或是脚本 |
-| /usr/src/ | 源码，核心源码放在/usr/src/linux/ |
+
+| 目录         | 存放                                   |
+| ------------ | -------------------------------------- |
+| /usr/games   | 游戏有关                               |
+| /usr/include | c/c++等语言header包含档(include)放置处 |
+| /usr/libexec | 不常用的执行档或是脚本                 |
+| /usr/src/    | 源码，核心源码放在/usr/src/linux/      |
 
 #### var意义及内容
-| 目录 | 内容 |
-| --- | --- |
-| var/cache | Application cache data |
-| var/lib | Variable state information 程式本身執行的過程中，需要使用到的資料檔案放置的目錄。在此目錄下各自的軟體應該要有各自的目錄。 舉例來說，MySQL的資料庫放置到/var/lib/mysql/而rpm的資料庫則放到/var/lib/rpm去！|
-| var/lock | Lock files 	某些裝置或者是檔案資源一次只能被一個應用程式所使用，如果同時有兩個程式使用該裝置時， 就可能產生一些錯誤的狀況，因此就得要將該裝置上鎖(lock)，以確保該裝置只會給單一軟體所使用。 舉例來說，燒錄機正在燒錄一塊光碟，你想一下，會不會有兩個人同時在使用一個燒錄機燒片？ 如果兩個人同時燒錄，那片子寫入的是誰的資料？所以當第一個人在燒錄時該燒錄機就會被上鎖， 第二個人就得要該裝置被解除鎖定(就是前一個人用完了)才能夠繼續使用囉。目前此目錄也已經挪到 /run/lock 中！|
-| var/log | 重要到不行！這是登錄檔放置的目錄！裡面比較重要的檔案如/var/log/messages, /var/log/wtmp(記錄登入者的資訊)等。 |
-| var/mail | 放置個人電子郵件信箱的目錄，不過這個目錄也被放置到/var/spool/mail/目錄中！ 通常這兩個目錄是互為連結檔啦！ |
-| var/run | Data relevant to running processes 某些程式或者是服務啟動後，會將他們的PID放置在這個目錄下喔！至於PID的意義我們會在後續章節提到的。 與 /run 相同，這個目錄連結到 /run 去了！ |
-| var/spool | Application spool data 	這個目錄通常放置一些佇列資料，所謂的『佇列』就是排隊等待其他程式使用的資料啦！ 這些資料被使用後通常都會被刪除。舉例來說，系統收到新信會放置到/var/spool/mail/中， 但使用者收下該信件後該封信原則上就會被刪除。信件如果暫時寄不出去會被放到/var/spool/mqueue/中， 等到被送出後就被刪除。|
+
+| **目录**  | **内容**                                                     |
+| --------- | ------------------------------------------------------------ |
+| var/cache | Application cache data                                       |
+| var/lib   | Variable state information 程式本身執行的過程中，需要使用到的資料檔案放置的目錄。在此目錄下各自的軟體應該要有各自的目錄。 舉例來說，MySQL的資料庫放置到/var/lib/mysql/而rpm的資料庫則放到/var/lib/rpm去！ |
+| var/lock  | Lock files 	某些裝置或者是檔案資源一次只能被一個應用程式所使用，如果同時有兩個程式使用該裝置時， 就可能產生一些錯誤的狀況，因此就得要將該裝置上鎖(lock)，以確保該裝置只會給單一軟體所使用。 舉例來說，燒錄機正在燒錄一塊光碟，你想一下，會不會有兩個人同時在使用一個燒錄機燒片？ 如果兩個人同時燒錄，那片子寫入的是誰的資料？所以當第一個人在燒錄時該燒錄機就會被上鎖， 第二個人就得要該裝置被解除鎖定(就是前一個人用完了)才能夠繼續使用囉。目前此目錄也已經挪到 /run/lock 中！ |
+| var/log   | 重要到不行！這是登錄檔放置的目錄！裡面比較重要的檔案如/var/log/messages, /var/log/wtmp(記錄登入者的資訊)等。 |
+| var/mail  | 放置個人電子郵件信箱的目錄，不過這個目錄也被放置到/var/spool/mail/目錄中！ 通常這兩個目錄是互為連結檔啦！ |
+| var/run   | Data relevant to running processes 某些程式或者是服務啟動後，會將他們的PID放置在這個目錄下喔！至於PID的意義我們會在後續章節提到的。 與 /run 相同，這個目錄連結到 /run 去了！ |
+| var/spool | Application spool data 	這個目錄通常放置一些佇列資料，所謂的『佇列』就是排隊等待其他程式使用的資料啦！ 這些資料被使用後通常都會被刪除。舉例來說，系統收到新信會放置到/var/spool/mail/中， 但使用者收下該信件後該封信原則上就會被刪除。信件如果暫時寄不出去會被放到/var/spool/mqueue/中， 等到被送出後就被刪除。 |
+
+
 
 
 ### 目录树(directory tree)
 * 目錄樹的啟始點為根目錄 (/, root)；
 * 每一個目錄不止能使用本地端的 partition 的檔案系統，也可以使用網路上的 filesystem 。舉例來說， 可以利用 Network File System (NFS) 伺服器掛載某特定目錄等。
-<img src="images/centos7_0210filepermission_4.jpg" style="zoom:130%;" />
+* <img src="images/centos7_0210filepermission_4.jpg" style="zoom:130%;" />
 
 ## centos观察
 除了FHS之外，还有Linux Standard Base(LSB)可以依循
