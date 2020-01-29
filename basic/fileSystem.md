@@ -132,3 +132,230 @@ Superblock 是記錄整個 filesystem 相關資訊的地方，记录的资料有
 #### 目录树读取
 
 新增/删除/改名档名与目录的W权限有关，是因为档名记录在目录的block当中，读取某个档案时，必须经过目录的inode与block
+
+目录树是从根目录读取，因此通过系统挂载的资讯找到挂载点的inode号码，此时能够得到根目录的inode内容。如果要读取```/etc/password```
+
+```bash
+[surwall@localhost ~]$ ll -di / /etc /etc/passwd
+      96 dr-xr-xr-x.  17 root root  224 Dec  4 00:36 /
+16797793 drwxr-xr-x. 140 root root 8192 Dec 13 06:08 /etc
+18045119 -rw-r--r--.   1 root root 2268 Dec  4 00:36 /etc/passwd
+```
+
+
+
+### EXT2/EXT3/EXT4 檔案的存取與日誌式檔案系統的功能
+
+如果我们想要增加一个档案，此时档案系统的行为是：
+
+1. 确定该目录是否有w与x权限
+2. 根据inode bitmap找到没有使用的inode号码，并将权限/属性写入
+3. 根据block bitmap找到闲置的block号码，资料写入，且更新inode的block指向资料
+4. 将刚刚写入的inode与block资料同步更新inode bitmap与block bitmap，并更新superblock内容
+
+一般将inode table与data block称为资料存放区域，其他区域称为metadata(中介资料)。
+
+#### 资料的不一致(inconsistent)
+
+当写入资料时，系统突然中断，所以写入的资料仅有inode table及data block而已，所以metadata内容与实际资料存放区产生不一致的情况了。
+
+#### 日志式档案系统(Journaling filesystem)
+
+1. 预备：当系统写入一个档案时，会在日志记录区块中记录某个档案准备要写入的资讯
+2. 实际写入：开始写入权限的权限与资料；开始更新metadata资料
+3. 结束：完成资料与metadata更新后，在日志记录区块完成该档案的记录
+
+### Linux档案系统的运作
+
+磁碟写入的速度比记忆体慢很多，因此常耗在等待磁碟的写入/读取上。
+
+因此解决这个效率的问题，因此Linux是透过一个称为异步处理的方式。當系統載入一個檔案到記憶體後，如果該檔案沒有被更動過，則在記憶體區段的檔案資料會被設定為乾淨(clean)的。但如果記憶體中的檔案資料被更改過了(例如你用 nano去編輯過這個檔案)，此時該記憶體中的資料會被設定為髒的(Dirty)。此時所有的動作都還在記憶體中執行，並沒有寫入到磁碟中！系統會不定時的將記憶體中設定為『Dirty』的資料寫回磁碟，以保持磁碟與記憶體資料的一致性。也可以利用sync指令。
+
+### 挂载点的意义(mount point)
+
+將檔案系統與目錄樹結合的動作我們稱為『掛載』。掛載點一定是目錄，該目錄為進入該檔案系統的入口。
+
+### 其他 Linux 支援的檔案系統與 VFS
+
+- 傳統檔案系統：ext2 / minix / MS-DOS / FAT (用 vfat 模組) / iso9660 (光碟)等等；
+- 日誌式檔案系統： ext3 /ext4 / ReiserFS / Windows' NTFS / IBM's JFS / SGI's XFS / ZFS
+- 網路檔案系統： NFS / SMBFS 
+
+查看linux支持的系统：
+
+```bash
+[surwall@localhost /]$ ls -l /lib/modules/$(uname -r)/kernel/fs
+```
+
+系统已经载入记忆体中支援的档案系统有：
+
+```bash
+cat /proc/filesystems
+```
+
+#### Linux VFS (Virtual Filesystem Switch)
+
+整個 Linux 的系統都是透過一個名為 Virtual Filesystem Switch 的核心功能去讀取 filesystem 的。
+
+![VFS 檔案系統的示意圖](images/centos7_vfs.gif)
+
+### XFS 檔案系統簡介
+
+xfs主要有三个部分：
+
+* 資料區 (data section)
+* 檔案系統活動登錄區 (log section)
+* 即時運作區 (realtime section)
+
+## 档案系统的简单操作
+
+- df：列出檔案系統的整體磁碟使用量；
+- du：評估檔案系統的磁碟使用量(常用在推估目錄所佔容量)
+
+```bash
+[root@study ~]# df [-ahikHTm] [目錄或檔名]
+選項與參數：
+-a  ：列出所有的檔案系統，包括系統特有的 /proc 等檔案系統；
+-k  ：以 KBytes 的容量顯示各檔案系統；
+-m  ：以 MBytes 的容量顯示各檔案系統；
+-h  ：以人們較易閱讀的 GBytes, MBytes, KBytes 等格式自行顯示；
+-H  ：以 M=1000K 取代 M=1024K 的進位方式；
+-T  ：連同該 partition 的 filesystem 名稱 (例如 xfs) 也列出；
+-i  ：不用磁碟容量，而以 inode 的數量來顯示
+
+[surwall@localhost /]$ df
+Filesystem              1K-blocks    Used Available Use% Mounted on
+devtmpfs                   457744       0    457744   0% /dev
+tmpfs                      474596       0    474596   0% /dev/shm
+tmpfs                      474596   19560    455036   5% /run
+tmpfs                      474596       0    474596   0% /sys/fs/cgroup
+/dev/mapper/centos-root  10475520 4035848   6439672  39% /
+/dev/sda2                 1038336  173832    864504  17% /boot
+/dev/mapper/centos-home   5232640  117248   5115392   3% /home
+tmpfs                       94920      36     94884   1% /run/user/1000
+```
+
+Filesystem：代表該檔案系統是在哪個 partition ，所以列出裝置名稱；
+
+Mounted on：就是磁碟掛載的目錄所在啦！
+
+***
+
+```
+[root@study ~]# du [-ahskm] 檔案或目錄名稱
+選項與參數：
+-a  ：列出所有的檔案與目錄容量，因為預設僅統計目錄底下的檔案量而已。
+-h  ：以人們較易讀的容量格式 (G/M) 顯示；
+-s  ：列出總量而已，而不列出每個各別的目錄佔用容量；
+-S  ：不包括子目錄下的總計，與 -s 有點差別。
+-k  ：以 KBytes 列出容量顯示；
+-m  ：以 MBytes 列出容量顯示；
+```
+
+### 實體連結與符號連結： ln
+
+#### Hard Link (實體連結, 硬式連結或實際連結)
+
+hard link 只是在某個目錄下新增一筆檔名連結到某 inode 號碼的關連記錄而已。
+
+```bash
+[root@localhost ~]# ll -i /etc/crontab 
+17392022 -rw-r--r--. 1 root root 451 Jun  9  2014 /etc/crontab
+[root@localhost ~]# ln /etc/crontab .
+[root@localhost ~]# ll -i /etc/crontab crontab 
+17392022 -rw-r--r--. 2 root root 451 Jun  9  2014 crontab
+17392022 -rw-r--r--. 2 root root 451 Jun  9  2014 /etc/crontab
+```
+
+那个栏位由1变为2。那个栏位表示有多少档名连接到这个inode号码。
+
+![實體連結的檔案讀取示意圖](images/hard_link1.gif)
+
+一般來說，使用 hard link 設定連結檔時，磁碟的空間與 inode 的數目都不會改變！
+
+hard link 是有限制的：
+
+- 不能跨 Filesystem；
+- 不能 link 目錄。
+
+#### Symbolic Link (符號連結，亦即是捷徑)
+
+![符號連結的檔案讀取示意圖](images/symbolic_link1.gif)
+
+```
+[root@study ~]# ln [-sf] 來源檔 目標檔
+選項與參數：
+-s  ：如果不加任何參數就進行連結，那就是hard link，至於 -s 就是symbolic link
+-f  ：如果 目標檔 存在時，就主動的將目標檔直接移除後再建立！
+```
+
+## 磁碟的分割、格式化、檢驗與掛載
+
+###  觀察磁碟分割狀態
+
+#### lsblk 列出系統上的所有磁碟列表
+
+lsblk 可以看成『 list block device 』的縮寫，就是列出所有儲存裝置的意思
+
+```
+[root@study ~]# lsblk [-dfimpt] [device]
+選項與參數：
+-d  ：僅列出磁碟本身，並不會列出該磁碟的分割資料
+-f  ：同時列出該磁碟內的檔案系統名稱
+-i  ：使用 ASCII 的線段輸出，不要使用複雜的編碼 (再某些環境下很有用)
+-m  ：同時輸出該裝置在 /dev 底下的權限資料 (rwx 的資料)
+-p  ：列出該裝置的完整檔名！而不是僅列出最後的名字而已。
+-t  ：列出該磁碟裝置的詳細資料，包括磁碟佇列機制、預讀寫的資料量大小等
+```
+
+#### blkid 列出裝置的 UUID 等參數
+
+#### parted 列出磁碟的分割表類型與分割資訊
+
+```bash
+[root@study ~]# parted device_name print
+```
+
+## 磁碟分割： gdisk/fdisk
+
+MBR 分割表請使用 fdisk 分割， GPT 分割表請使用 gdisk 分割！
+
+***
+
+## 檔案系統掛載與卸載
+
+```bash
+
+[root@study ~]# mount -a
+[root@study ~]# mount [-l]
+[root@study ~]# mount [-t 檔案系統] LABEL=''  掛載點
+[root@study ~]# mount [-t 檔案系統] UUID=''   掛載點  
+[root@study ~]# mount [-t 檔案系統] 裝置檔名  掛載點
+```
+
+## 设定开机挂载
+
+在```etc/fstab```里面添加
+
+```bash
+[裝置/UUID等]  [掛載點]  [檔案系統]  [檔案系統參數]  [dump]  [fsck]
+```
+
+- 第一欄：磁碟裝置檔名/UUID/LABEL name：
+
+  這個欄位可以填寫的資料主要有三個項目：
+
+  * 檔案系統或磁碟的裝置檔名，如 /dev/vda2 等
+  * 檔案系統的 UUID 名稱，如 UUID=xxx
+  * 檔案系統的 LABEL 名稱，例如 LABEL=xxx
+
+- 第四欄：檔案系統參數：
+
+  -  同時具有 **rw, suid, dev, exec, auto, nouser, async** 等參數。 基本上，預設情況使用 defaults 設定即可！
+
+- 第五欄：能否被 dump 備份指令作用：（直接输入0）
+
+- 第六欄：是否以 fsck 檢驗磁區：（直接输入0）
+
+
+
